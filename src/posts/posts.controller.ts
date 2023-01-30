@@ -1,7 +1,10 @@
+import PostNotFoundException from "../exceptions/PostNotFoundException";
 import * as express from "express";
 import Controller from "interfaces/controller.interface";
 import Post from "./post.interface";
 import postModel from "./posts.model";
+import validationMiddleware from "../middleware/validation.middleware";
+import CreatePostDto from "./post.dto";
 
 class PostsController implements Controller {
   public path = "/posts";
@@ -15,9 +18,18 @@ class PostsController implements Controller {
   public initializeRoutes() {
     this.router.get(this.path, this.getAllPosts);
     this.router.get(`${this.path}/:id`, this.getPostById);
-    this.router.patch(`${this.path}/:id`, this.modifyPost);
+    this.router.patch(
+      `${this.path}/:id`,
+      validationMiddleware(CreatePostDto, true),
+      this.modifyPost
+    );
+
     this.router.delete(`${this.path}/:id`, this.deletePost);
-    this.router.post(this.path, this.createPost);
+    this.router.post(
+      this.path,
+      validationMiddleware(CreatePostDto),
+      this.createPost
+    );
   }
 
   private getAllPosts = async (
@@ -28,23 +40,34 @@ class PostsController implements Controller {
     return res.json({ posts });
   };
 
-  private getPostById = async (req: express.Request, res: express.Response) => {
+  private getPostById = async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
     const { id } = req.params;
     const post = await this.post.findById(id).select("-__v").lean().exec();
     if (post) {
       res.json({ post });
     }
-    res.status(404).send({ error: "Post Not Found" });
+    next(new PostNotFoundException(id));
   };
 
-  private modifyPost = async (req: express.Request, res: express.Response) => {
+  private modifyPost = async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
     const { id } = req.params;
     const postData: Post = req.body;
     const post = await this.post
       .findByIdAndUpdate(id, postData, { new: true })
       .select("-__v")
       .exec();
-    res.json({ post });
+    if (post) {
+      res.json({ post });
+    }
+    next(new PostNotFoundException(id));
   };
 
   private createPost = async (req: express.Request, res: express.Response) => {
@@ -54,14 +77,17 @@ class PostsController implements Controller {
     res.json({ savedPost });
   };
 
-  private deletePost = async (req: express.Request, res: express.Response) => {
+  private deletePost = async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NestFunction
+  ) => {
     const { id } = req.params;
     const successResponse = await this.post.findByIdAndDelete(id).exec();
     if (successResponse) {
-      res.status(200).send();
+      res.status(200).json({ message: "Deleted Successfully" });
     }
-
-    res.status(400).send();
+    next(new PostNotFoundException(id));
   };
 }
 
