@@ -1,0 +1,26 @@
+{
+  "name": "express-typescript",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.ts",
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "dotenv": "^16.0.3",
+    "envalid": "^7.3.1",
+    "express": "^4.16.4",
+    "mongoose": "^6.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^10.12.11",
+    "nodemon": "^1.19.4",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "tslint-config-airbnb": "^5.11.1",
+    "typescript": "^3.2.1"
+  },
+  "scripts": {
+    "dev": "ts-node ./src/server.ts"
+  },
+  "author": "Marcin Wanago",
+  "license": "MIT"
+}
