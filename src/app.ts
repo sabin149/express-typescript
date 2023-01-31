@@ -1,5 +1,6 @@
 import * as express from "express";
 import * as bodyParser from "body-parser";
+import * as cookieParser from "cookie-parser";
 import * as mongoose from "mongoose";
 import Controller from "./interfaces/controller.interface";
 import errorMiddleware from "./middleware/error.middleware";
@@ -23,6 +24,7 @@ class App {
 
   private initializeMiddlewares() {
     this.app.use(bodyParser.json());
+    this.app.use(cookieParser());
   }
 
   private initializeControllers(controllers: Controller[]) {
@@ -34,7 +36,13 @@ class App {
   private connectToTheDatabase() {
     const { MONGO_URI } = process.env;
     mongoose.set("strictQuery", false);
-    mongoose.connect(MONGO_URI);
+    mongoose.connect(MONGO_URI, (err) => {
+      if (err) {
+        console.log(err);
+        process.exit(1);
+      }
+      return console.log(`Successfully connected to the Database`);
+    });
   }
 
   private initializeErrorHandling() {
